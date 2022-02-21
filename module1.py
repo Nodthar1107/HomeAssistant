@@ -18,7 +18,6 @@ def find_state(id):
             return state
 
 def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
     client.subscribe("homeassistant/#")
 
 def on_message(client, userdata, msg):
@@ -29,12 +28,12 @@ def on_message(client, userdata, msg):
             topics_list.append(data["state_topic"])
             devices_unique_id.append(data["unique_id"])
             client.subscribe(topics_list[-1])
-            print(topics_list)
+
             
             register_invalid_topics(data["device"]["identifiers"][0])
     else:
         if "Hass" in msg.topic:
-            print("Ignore")
+            pass
         elif "Device" in msg.topic:
             dev_to_correct(msg.payload, msg.topic)
         elif "XmlSensor_" in msg.topic:
@@ -65,11 +64,7 @@ def register_invalid_topics(identifier):
 # data preformers
 
 def dev_to_correct(invalid_data, topic):
-    print(invalid_data)
-    print(invalid_data.decode("utf-8"))
     invalid_data = json.loads(invalid_data.decode("utf-8"))
-    print(type(invalid_data))
-    print(topic)
     id = topic.split("vice")[1]
     state = find_state(id)
     
@@ -79,8 +74,7 @@ def dev_to_correct(invalid_data, topic):
         "name": invalid_data["Sensor"],
         state: invalid_data["value"]           
     }
-    print(id)
-    print(json.dumps(valid_data))
+
     send_to_mqtt(json.dumps(valid_data), id)
 
 def xml_to_correct(invalid_data, topic):
@@ -93,7 +87,6 @@ def xml_to_correct(invalid_data, topic):
         invalid_data["sensor"]["data"]["name"]: invalid_data["sensor"]["data"]["value"]        
     }
 
-    print(json.dumps(valid_data))
     send_to_mqtt(json.dumps(valid_data), identifier)
 
 def csv_to_correct(invalid_data, topic):
@@ -105,7 +98,6 @@ def csv_to_correct(invalid_data, topic):
         invalid_data[0]: invalid_data[1]        
     }
 
-    print(json.dumps(valid_data))
     send_to_mqtt(json.dumps(valid_data), identifier)
 
 def text_to_correct(invalid_data, topic):
@@ -117,7 +109,6 @@ def text_to_correct(invalid_data, topic):
         state: invalid_data.decode("utf-8")      
     }
 
-    print(json.dumps(valid_data))
     send_to_mqtt(json.dumps(valid_data), identifier)
 
 
